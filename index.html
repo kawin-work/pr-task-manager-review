@@ -2472,10 +2472,11 @@ function layout(){
 }
 function coverOf(el, cache){
   var d = el.closest('[role="dialog"]'); if (!d) return 0;
-  if (cache.has(d)) return cache.get(d);
+  var list = cache.get(d);
+  if (!list){ list = Array.prototype.filter.call(d.querySelectorAll(':scope > *, :scope > * > *'), function(n){ return getComputedStyle(n).position === 'sticky'; }); cache.set(d, list); }
   var b = 0;
-  Array.prototype.forEach.call(d.querySelectorAll(':scope > *, :scope > * > *'), function(n){ if (!n.contains(el) && getComputedStyle(n).position === 'sticky'){ var q = n.getBoundingClientRect(); if (q.height) b = Math.max(b, q.bottom); } });
-  cache.set(d, b); return b;
+  for (var i = 0; i < list.length; i++){ if (list[i].contains(el)) return 0; var q = list[i].getBoundingClientRect(); if (q.height) b = Math.max(b, q.bottom); }
+  return b;
 }
 var flashEl = null;
 function placeFlash(c, r, nums){
