@@ -2132,6 +2132,8 @@ function resolve(c){
     var all = document.querySelectorAll('.pr ' + c.tag);
     for (var i = 0; i < all.length; i++) if (clip(txt(all[i]), 60) === c.elText) return all[i];
   }
+  // the element at the saved spot shows different text: keep the pin only if the text is a near match (e.g. a count changed)
+  if (el && c.elText){ var t = clip(txt(el), 60), n = 0; while (n < t.length && n < c.elText.length && t.charAt(n) === c.elText.charAt(n)) n++; if (n < Math.min(6, c.elText.length)) return null; }
   return SHARED[c.screen] ? null : el;
 }
 
