@@ -2739,6 +2739,7 @@ async function reach(c){
 }
 async function jumpTo(c){
   if (S.jumping) return; S.jumping = true;
+  S.flash = null; clearTimeout(S.flashT); schedule();
   try {
     if (S.composer){ if (S.composer.note.trim()){ toast('มีคอมเมนต์ที่ยังไม่บันทึก บันทึกหรือปิดก่อน'); return; } closeComposer(); }
     if (S.sum.open) closeSummary();
