@@ -10,8 +10,9 @@ var CC = [
   ['note', 'โน้ตต้นฉบับ'], ['statusTh', 'สถานะ'], ['title', 'หัวข้อ (สำหรับ dev)'], ['change', 'เปลี่ยน'], ['reason', 'เหตุผล'],
   ['affects', 'กระทบส่วนอื่น'], ['doneWhen', 'ถือว่าเสร็จเมื่อ'], ['questions', 'รอตัดสิน (คำถาม)'], ['role', 'มุมมอง'],
   ['updatedAt', 'แก้ไขล่าสุด'], ['selector', 'selector'], ['tag', 'tag'], ['elText', 'elText'], ['ox', 'ox'], ['oy', 'oy'],
-  ['html', 'html'], ['author', 'authorId']
+  ['html', 'html'], ['author', 'authorId'], ['expandTh', 'ให้ Claude ขยาย']
 ];
+var EX = {want: 'รอขยาย', no: 'ไม่ต้องขยาย', done: 'ขยายแล้ว'};
 var RC = [['id', 'รหัส'], ['commentId', 'คอมเมนต์'], ['createdAt', 'เวลา'], ['authorName', 'ผู้เขียน'], ['text', 'ข้อความ'], ['author', 'authorId']];
 var NOT_TEXT = {createdAt: 1, updatedAt: 1, ox: 1, oy: 1};
 var WIDE = {note: 280, change: 320, reason: 240, affects: 240, doneWhen: 240, questions: 260, title: 260, pathText: 240, text: 360};
@@ -20,16 +21,21 @@ function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
 function sheet_(name, cols) {
   var sh = ss_().getSheetByName(name);
   if (!sh) sh = ss_().insertSheet(name);
-  if (sh.getLastRow() === 0) {
-    sh.getRange(1, 1, 1, cols.length).setValues([cols.map(function (c) { return c[1]; })]).setFontWeight('bold').setBackground('#EEEAFE');
+  var have = sh.getLastRow() === 0 ? 0 : sh.getLastColumn();
+  if (have < cols.length) {
+    // new sheet, or columns added in a later version: write the missing headers and format those columns
+    if (sh.getMaxColumns() < cols.length) sh.insertColumnsAfter(sh.getMaxColumns(), cols.length - sh.getMaxColumns());
+    sh.getRange(1, have + 1, 1, cols.length - have).setValues([cols.slice(have).map(function (c) { return c[1]; })]).setFontWeight('bold').setBackground('#EEEAFE');
     sh.setFrozenRows(1);
     var rows = sh.getMaxRows() - 1;
     cols.forEach(function (c, i) {
+      if (i < have) return;
       var rg = sh.getRange(2, i + 1, rows, 1);
       if (!NOT_TEXT[c[0]]) rg.setNumberFormat('@');
       if (WIDE[c[0]]) { sh.setColumnWidth(i + 1, WIDE[c[0]]); rg.setWrap(true); }
       if (c[0] === 'createdAt' || c[0] === 'updatedAt') rg.setNumberFormat('d/m/yyyy hh:mm');
       if (c[0] === 'statusTh') rg.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList([ST.open, ST.ready, ST.done], true).build());
+      if (c[0] === 'expandTh') { rg.setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList([EX.want, EX.no, EX.done], true).setAllowInvalid(true).build()); sh.setColumnWidth(i + 1, 130); }
     });
   }
   return sh;
@@ -61,11 +67,14 @@ function writeRow_(sh, cols, r, o) { if (r > sh.getMaxRows()) sh.insertRowsAfter
 function commentOut_(o) {
   var hasSpec = String(o.title || '') !== '' || String(o.change || '') !== '';
   var st = 'open'; Object.keys(ST).forEach(function (k) { if (ST[k] === String(o.statusTh)) st = k; });
+  var ex = ''; Object.keys(EX).forEach(function (k) { if (EX[k] === String(o.expandTh || '')) ex = k; });
+  if (hasSpec) ex = 'done';
   return {
     id: String(o.id), createdAt: toMs_(o.createdAt), updatedAt: toMs_(o.updatedAt), authorName: String(o.authorName), author: String(o.author),
     screen: String(o.screen), role: String(o.role), path: String(o.pathText).split(' › ').filter(String), note: String(o.note), status: st,
     spec: hasSpec ? {title: String(o.title), change: String(o.change), reason: String(o.reason), affects: lines_(o.affects), done_when: lines_(o.doneWhen), questions: lines_(o.questions)} : null,
-    selector: String(o.selector), tag: String(o.tag), elText: String(o.elText), ox: Number(o.ox) || 0, oy: Number(o.oy) || 0, html: String(o.html)
+    selector: String(o.selector), tag: String(o.tag), elText: String(o.elText), ox: Number(o.ox) || 0, oy: Number(o.oy) || 0, html: String(o.html),
+    expand: ex
   };
 }
 function commentIn_(d, prev) {
@@ -82,6 +91,8 @@ function commentIn_(d, prev) {
     o.affects = (s.affects || []).join('\n'); o.doneWhen = (s.done_when || []).join('\n'); o.questions = (s.questions || []).join('\n');
   }
   ['selector', 'tag', 'elText', 'ox', 'oy', 'html'].forEach(function (k) { set(k, d[k]); });
+  if (d.expand !== undefined) o.expandTh = EX[d.expand] || '';
+  if (d.spec && (d.spec.title || d.spec.change)) o.expandTh = EX.done;
   if (!o.statusTh) o.statusTh = ST.open;
   return o;
 }

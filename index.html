@@ -264,6 +264,24 @@ cm-root :focus-visible{outline:2px solid var(--cm-pin);outline-offset:2px}
 .cm-flash.is-still{animation:none;box-shadow:0 0 0 6px color-mix(in srgb,var(--cm-fc) 30%,transparent)}
 .cm-flash-tag{position:absolute;left:-3px;bottom:calc(100% + 5px);padding:2px 9px;border-radius:7px 7px 7px 2px;background:var(--cm-fc);color:var(--cm-pin-ink);font:600 12px/1.5 var(--cm-font);white-space:nowrap;box-shadow:var(--cm-shadow)}
 @keyframes cm-flash{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--cm-fc) 55%,transparent)}100%{box-shadow:0 0 0 18px color-mix(in srgb,var(--cm-fc) 0%,transparent)}}
+/* expand choice */
+.cm-seg{display:flex;gap:4px;padding:3px;border:1px solid var(--cm-line);border-radius:10px;background:var(--cm-bg2)}
+.cm-seg-b{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:4px 10px;border:0;border-radius:7px;background:transparent;color:var(--cm-sub);font:500 13px/1.3 var(--cm-font);cursor:pointer}
+.cm-seg-b:hover{color:var(--cm-ink)}
+.cm-seg-b[aria-checked="true"]{background:var(--cm-bg);color:var(--cm-ink);box-shadow:0 0 0 1px var(--cm-line),0 1px 2px rgba(0,0,0,.08)}
+.cm-seg-b[aria-checked="true"] .cm-ic{color:var(--cm-pin)}
+.cm-seg-b:disabled{opacity:.55;cursor:default}
+.cm-exp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:9px;background:var(--cm-bg2);font-size:13px;color:var(--cm-sub)}
+.cm-exp p{margin:0}
+.cm-exp-dot{width:8px;height:8px;border-radius:4px;background:var(--cm-done);flex:none}
+.cm-exp[data-x="want"] .cm-exp-dot{background:var(--cm-pin)}
+.cm-xtag[data-x="want"]{color:var(--cm-pin);font-weight:600}
+.cm-note-head{gap:8px}
+.cm-note-head .cm-link{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--cm-pin);text-decoration:none}
+.cm-note-head .cm-link:hover{text-decoration:underline}
+.cm-editbox{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--cm-pin);border-radius:10px}
+.cm-editbox .cm-hint{margin:0}
+.cm-editbox .cm-seg-b{font-size:12.5px;padding:4px 6px}
 
 </style>
 <x-dc>
@@ -1988,6 +2006,7 @@ class Component extends DCLogic {
 /* ---------- constants ---------- */
 var ST = {open:'รอตัดสิน', ready:'พร้อมพัฒนา', done:'เสร็จแล้ว'};
 var ICON = {
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   cursor:'<path d="M5 3l13 7.5-5.6 1.6L9.8 18z"/>',
   bubble:'<path d="M20 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.3-4.6A7.5 7.5 0 1 1 20 11.5z"/>',
   list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
@@ -2562,26 +2581,40 @@ function openComposer(el, x, y){
   renderComposer(true); schedule();
 }
 function closeComposer(){ if (S.composer && S.composer.ctl) S.composer.ctl.abort(); S.composer = null; closePop(); schedule(); }
+function expandOf(c){ return c.spec ? 'done' : (c.expand === 'want' ? 'want' : (c.expand === 'no' ? 'no' : '')); }
+var EXP = {want:'รอ Claude ขยาย', no:'ไม่ต้องขยาย', done:'ขยายแล้ว', '':'ยังไม่ได้เลือก'};
 function renderComposer(focus){
   var c = S.composer; if (!c) return;
+  if (!c.choice) c.choice = lsGet('cm-expand') === 'no' ? 'no' : 'want';
+  var want = c.choice === 'want', now = want && !!S.sample;
+  var seg = h('div', {class:'cm-seg', role:'radiogroup', 'aria-label':'ให้ Claude ขยายความไหม'});
+  [['want', 'ให้ Claude ขยายความ', 'spark'], ['no', 'ไม่ต้องขยาย', null]].forEach(function(o){
+    seg.append(h('button', {class:'cm-seg-b', type:'button', role:'radio', 'aria-checked':String(c.choice === o[0]), disabled:c.busy, onClick:function(){
+      if (c.choice === o[0]) return; c.choice = o[0]; lsSet('cm-expand', o[0]); if (o[0] === 'no') c.spec = null; renderComposer(true); }}, o[2] ? ic(o[2], 15) : null, o[1]));
+  });
   var ta = h('textarea', {class:'cm-ta', id:'cm-note', rows:'3', placeholder:'พิมพ์สั้น ๆ ภาษาธรรมดา เช่น “เอาออก ทุกคนบอกว่าด่วนหมด”', 'aria-label':'โน้ตคอมเมนต์'});
   ta.value = c.note; ta.disabled = c.busy;
   ta.addEventListener('input', function(){ c.note = ta.value; if (c.spec){ c.spec = null; renderComposer(true); } else saveBtn.disabled = !ta.value.trim(); if (expBtn) expBtn.disabled = !ta.value.trim(); });
-  ta.addEventListener('keydown', function(e){ if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); if (c.spec || !S.sample) doSave(); else doExpand(); } });
-  var expBtn = S.sample ? h('button', {class:'cm-btn ' + (c.spec ? '' : 'cm-btn-p'), type:'button', disabled:!c.note.trim() || c.busy, onClick:doExpand}, ic('spark', 16), c.spec ? 'ขยายใหม่' : 'ให้ Claude ขยาย') : null;
-  var saveBtn = h('button', {class:'cm-btn ' + (c.spec || !S.sample ? 'cm-btn-p' : ''), type:'button', disabled:!c.note.trim() || c.busy, onClick:doSave, text:c.spec ? 'บันทึก' : (S.sample ? 'บันทึกโดยไม่ขยาย' : 'บันทึก')});
+  ta.addEventListener('keydown', function(e){ if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); if (c.spec || !now) doSave(); else doExpand(); } });
+  var expBtn = now ? h('button', {class:'cm-btn ' + (c.spec ? '' : 'cm-btn-p'), type:'button', disabled:!c.note.trim() || c.busy, onClick:doExpand}, ic('spark', 16), c.spec ? 'ขยายใหม่' : 'ให้ Claude ขยาย') : null;
+  var saveBtn = h('button', {class:'cm-btn ' + (c.spec || !now ? 'cm-btn-p' : ''), type:'button', disabled:!c.note.trim() || c.busy, onClick:doSave, text:c.spec ? 'บันทึก' : (now ? 'บันทึกก่อน ขยายทีหลัง' : 'บันทึก')});
+  var hint = c.spec ? 'ตรวจดูแล้วกดบันทึก ถ้ายังไม่ตรงให้แก้โน้ตแล้วกดขยายใหม่'
+    : !want ? 'บันทึกตามที่พิมพ์ dev จะเห็นโน้ตนี้ตรง ๆ'
+    : now ? 'Claude จะเขียนเป็นรายการให้ dev พร้อมคำถามที่ทีมต้องตัดสิน ให้ตรวจก่อนบันทึก'
+    : S.connecting ? '' : 'บันทึกแล้วคอมเมนต์จะเข้าคิว “รอ Claude ขยาย” เมื่อสั่ง Claude ขยาย ผลจะขึ้นในคอมเมนต์นี้และใน Google Sheet';
   var pop = h('div', {class:'cm-pop', role:'dialog', 'aria-label':'คอมเมนต์ใหม่'},
     h('div', {class:'cm-pop-head'}, h('span', {class:'cm-badge', text:'+'}), h('strong', {class:'cm-grow', text:'คอมเมนต์ใหม่'}), h('button', {class:'cm-x', type:'button', 'aria-label':'ปิด', onClick:closeComposer}, ic('x', 16))),
-    crumbNode(c.ctx.path, c.ctx.role), nameField(), ta,
+    crumbNode(c.ctx.path, c.ctx.role), nameField(), ta, seg,
     c.busy ? thinking(function(){ if (c.ctl) c.ctl.abort(); }) : null,
     c.spec ? specNode(c.spec) : null,
-    c.spec ? h('p', {class:'cm-hint', text:'ตรวจดูแล้วกดบันทึก ถ้ายังไม่ตรงให้แก้โน้ตแล้วกดขยายใหม่'}) : (!S.sample && !S.connecting ? h('p', {class:'cm-hint', text:S.live ? 'หน้านี้ยังเรียก Claude ไม่ได้ โน้ตจะถูกบันทึกไว้ก่อน แล้วขยายภายหลังได้' : 'ปุ่มให้ Claude ขยายใช้ได้เมื่อเปิดผ่าน claude.ai · คอมเมนต์นี้จะเก็บในเบราว์เซอร์เครื่องนี้'}) : null),
+    hint ? h('p', {class:'cm-hint', text:hint}) : null,
+    !S.live && !S.connecting ? h('p', {class:'cm-hint', text:'คอมเมนต์นี้จะเก็บในเบราว์เซอร์เครื่องนี้'}) : null,
     c.busy ? null : h('div', {class:'cm-row'}, c.spec ? [saveBtn, expBtn] : [expBtn, saveBtn])
   );
   showPop(pop, function(){ return composerPoint(); });
   if (focus) setTimeout(function(){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 0);
   async function doExpand(){
-    if (!c.note.trim() || !S.sample) return;
+    if (!c.note.trim() || !S.sample || c.choice !== 'want') return;
     c.busy = true; c.ctl = new AbortController(); renderComposer();
     try { c.spec = await expand(c.ctx, c.note.trim(), null, null, c.ctl.signal); }
     catch(e){ toast(sampleErr(e)); }
@@ -2594,7 +2627,7 @@ function renderComposer(focus){
     if (!takeName()) return;
     var now = Date.now(), x = c.ctx;
     var doc = {note:c.note.trim(), screen:x.screen, role:x.role, path:x.path, selector:x.selector, tag:x.tag, elText:x.elText, html:x.html,
-      ox:x.ox, oy:x.oy, spec:c.spec || null, status:'open', author:S.me || '', createdAt:now, updatedAt:now};
+      ox:x.ox, oy:x.oy, spec:c.spec || null, expand:c.spec ? 'done' : c.choice, status:'open', author:S.me || '', createdAt:now, updatedAt:now};
     if (S.source === 'sheet') doc.authorName = myName();
     c.busy = true; renderComposer();
     try { var id = await S.store.add('comments', doc); closeComposer(); var n = numbers()[id]; toast('บันทึกคอมเมนต์' + (n ? ' #' + n : '') + ' แล้ว' + (S.source === 'sheet' ? ' (ลง Google Sheet)' : '')); }
@@ -2603,6 +2636,17 @@ function renderComposer(focus){
 }
 
 /* thread */
+function expandRow(c){
+  var x = expandOf(c), edit = S.canWrite && !c._ro;
+  var label = x === 'want' ? (S.sample ? 'ขอให้ Claude ขยายไว้ กด “ให้ Claude ขยาย” ด้านล่างได้เลย' : 'อยู่ในคิว รอ Claude ขยายเป็นรายการสำหรับ dev')
+    : x === 'no' ? 'ไม่ต้องขยาย dev ใช้โน้ตตามที่เขียน' : 'ยังไม่ได้ขยายเป็นรายการสำหรับ dev';
+  function setX(v){ S.store.update('comments', c.id, {expand:v, updatedAt:Date.now()}).then(function(){ toast(v === 'want' ? 'ใส่คิวให้ Claude ขยายแล้ว' : 'เปลี่ยนเป็นไม่ต้องขยายแล้ว'); }).catch(function(e){ toast(writeErr(e)); }); }
+  return h('div', {class:'cm-exp', 'data-x':x || 'none'},
+    h('span', {class:'cm-exp-dot', 'aria-hidden':'true'}),
+    h('p', {class:'cm-grow', text:label}),
+    edit && x !== 'want' ? h('button', {class:'cm-btn cm-btn-q', type:'button', onClick:function(){ setX('want'); }}, ic('spark', 15), 'ขอให้ Claude ขยาย') : null,
+    edit && x === 'want' ? h('button', {class:'cm-btn cm-btn-q', type:'button', text:'ไม่ต้องขยายแล้ว', onClick:function(){ setX('no'); }}) : null);
+}
 function openThread(id, from, quiet){
   if (S.composer){ if (S.composer.note.trim()){ toast('มีคอมเมนต์ที่ยังไม่บันทึก บันทึกหรือปิดก่อน'); return; } closeComposer(); }
   S.thread = {id:id, from:from, busy:false, ctl:null, draft:'', confirmDel:false};
@@ -2629,7 +2673,26 @@ function renderThread(focus){
   ta.addEventListener('input', function(){ t.draft = ta.value; sendBtn.disabled = !ta.value.trim(); });
   ta.addEventListener('keydown', function(e){ if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); sendReply(); } });
   var sendBtn = h('button', {class:'cm-btn cm-btn-p', type:'button', disabled:!t.draft.trim(), onClick:sendReply}, ic('send', 15), 'ส่ง');
-  var here = c._here;
+  var here = c._here, canEdit = S.canWrite && !c._ro, ed = t.edit;
+  var noteBlock;
+  if (ed){
+    var eta = h('textarea', {class:'cm-ta', id:'cm-edit', rows:'3', 'aria-label':'แก้ไขโน้ต'}); eta.value = ed.note; eta.disabled = ed.busy;
+    eta.addEventListener('input', function(){ ed.note = eta.value; esave.disabled = !eta.value.trim(); });
+    eta.addEventListener('keydown', function(e){ if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); saveEdit(); } if (e.key === 'Escape'){ e.stopPropagation(); t.edit = null; renderThread(); } });
+    var opts = (c.spec ? [['keep', 'เก็บรายละเอียดเดิม', null]] : []).concat([['want', c.spec ? 'ให้ Claude ขยายใหม่' : 'ให้ Claude ขยายความ', 'spark'], ['no', 'ไม่ต้องขยาย', null]]);
+    var eseg = h('div', {class:'cm-seg', role:'radiogroup', 'aria-label':'หลังแก้โน้ต'});
+    opts.forEach(function(o){ eseg.append(h('button', {class:'cm-seg-b', type:'button', role:'radio', 'aria-checked':String(ed.choice === o[0]), disabled:ed.busy, onClick:function(){ ed.note = eta.value; ed.choice = o[0]; renderThread(); setTimeout(function(){ var x = popEl && popEl.querySelector('#cm-edit'); if (x) x.focus(); }, 0); }}, o[2] ? ic(o[2], 15) : null, o[1])); });
+    var ehint = ed.choice === 'keep' ? 'แก้แค่ข้อความโน้ต รายละเอียดสำหรับ dev ยังเป็นของเดิม'
+      : ed.choice === 'want' ? (S.sample ? 'Claude จะขยายใหม่จากโน้ตที่แก้' : 'บันทึกแล้วเข้าคิว “รอ Claude ขยาย”' + (c.spec ? ' รายละเอียดเดิมจะถูกล้าง' : ''))
+      : (c.spec ? 'รายละเอียดเดิมที่ Claude ขยายไว้จะถูกล้าง dev จะเห็นโน้ตตรง ๆ' : 'dev จะเห็นโน้ตตามที่พิมพ์');
+    var esave = h('button', {class:'cm-btn cm-btn-p', type:'button', disabled:!ed.note.trim() || ed.busy, onClick:saveEdit, text:'บันทึกการแก้ไข'});
+    noteBlock = h('div', {class:'cm-editbox'}, h('div', {class:'cm-label', text:'แก้ไขโน้ต'}), eta, eseg, h('p', {class:'cm-hint', text:ehint}),
+      ed.busy ? thinking(function(){ if (ed.ctl) ed.ctl.abort(); }) : h('div', {class:'cm-row'}, esave, h('button', {class:'cm-btn', type:'button', text:'ยกเลิก', onClick:function(){ t.edit = null; renderThread(); }})));
+  } else {
+    noteBlock = h('div', null, h('div', {class:'cm-row cm-note-head'}, h('div', {class:'cm-label cm-grow', text:'โน้ตต้นฉบับ'}),
+        canEdit && !t.busy ? h('button', {class:'cm-link', type:'button', onClick:function(){ t.edit = {note:c.note, choice:c.spec ? 'keep' : (expandOf(c) === 'want' ? 'want' : 'no'), busy:false}; renderThread(); setTimeout(function(){ var x = popEl && popEl.querySelector('#cm-edit'); if (x){ x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 0); }}, ic('edit', 14), 'แก้ไข') : null),
+      h('p', {class:'cm-note', text:c.note}));
+  }
   var pop = h('div', {class:'cm-pop', role:'dialog', 'aria-label':'คอมเมนต์ #' + n},
     h('div', {class:'cm-pop-head'}, h('span', {class:'cm-badge', 'data-st':st, text:String(n)}),
       h('div', {class:'cm-grow'}, h('strong', {text:nameOf(c.author, c)}), h('div', {class:'cm-meta', text:when(c.createdAt) + (c._ro ? ' · ข้อมูลทีม (อ่านอย่างเดียว)' : c._local ? ' · เก็บในเครื่องนี้' : '')})),
@@ -2637,8 +2700,8 @@ function renderThread(focus){
       h('button', {class:'cm-x', type:'button', 'aria-label':'ปิด', onClick:closeThread}, ic('x', 16))),
     crumbNode(c.path, c.role),
     !here ? h('div', {class:'cm-row'}, h('p', {class:'cm-hint cm-grow', text:'หมุดนี้อยู่ที่หน้า “' + c.screen + '”' + (c.role ? ' (มุมมอง ' + c.role + ')' : '')}), h('button', {class:'cm-btn', type:'button', text:'ไปที่จุดนี้', onClick:function(){ jumpTo(c); }})) : null,
-    h('div', null, h('div', {class:'cm-label', text:'โน้ตต้นฉบับ'}), h('p', {class:'cm-note', text:c.note})),
-    t.busy ? thinking(function(){ if (t.ctl) t.ctl.abort(); }) : (c.spec ? specNode(c.spec) : h('p', {class:'cm-hint', text:'ยังไม่ได้ขยายเป็นรายการสำหรับ dev'})),
+    noteBlock,
+    ed ? null : t.busy ? thinking(function(){ if (t.ctl) t.ctl.abort(); }) : (c.spec ? specNode(c.spec) : expandRow(c)),
     reps.length ? h('div', {class:'cm-replies'}, reps.map(function(r){ return h('div', {class:'cm-reply'}, h('small', {text:nameOf(r.author, r) + ' · ' + when(r.createdAt)}), h('p', {text:r.text})); })) : null,
     S.canWrite ? nameField() : null,
     S.canWrite ? ta : null,
@@ -2662,9 +2725,27 @@ function renderThread(focus){
     t.busy = true; t.ctl = new AbortController(); renderThread();
     try {
       var spec = await expand({path:c.path, role:c.role, elText:c.elText, html:c.html}, c.note, reps.map(function(r){ return plainName(r.author, r) + ': ' + r.text; }), c.spec, t.ctl.signal);
-      await S.store.update('comments', c.id, {spec:spec, updatedAt:Date.now()});
+      await S.store.update('comments', c.id, {spec:spec, expand:'done', updatedAt:Date.now()});
     } catch(e){ toast(e && e.code && e.code !== 'invalid_argument' ? sampleErr(e) : writeErr(e)); }
     if (S.thread === t){ t.busy = false; t.ctl = null; renderThread(); }
+  }
+  async function saveEdit(){
+    var e = t.edit; if (!e || e.busy) return;
+    var note = (popEl && popEl.querySelector('#cm-edit') ? popEl.querySelector('#cm-edit').value : e.note).trim();
+    if (!note) return;
+    if (note === c.note && e.choice === (c.spec ? 'keep' : (expandOf(c) === 'want' ? 'want' : 'no'))){ t.edit = null; renderThread(); return; }
+    var patch = {note:note, updatedAt:Date.now()};
+    if (e.choice === 'no'){ patch.spec = null; patch.expand = 'no'; }
+    if (e.choice === 'want'){
+      if (S.sample){
+        e.busy = true; e.note = note; e.ctl = new AbortController(); renderThread();
+        try { patch.spec = await expand({path:c.path, role:c.role, elText:c.elText, html:c.html}, note, reps.map(function(r){ return plainName(r.author, r) + ': ' + r.text; }), null, e.ctl.signal); patch.expand = 'done'; }
+        catch(err){ e.busy = false; if (S.thread === t) renderThread(); toast(sampleErr(err)); return; }
+      } else { patch.spec = null; patch.expand = 'want'; }
+    }
+    e.busy = true; renderThread();
+    try { await S.store.update('comments', c.id, patch); if (S.thread === t){ t.edit = null; renderThread(); } toast('บันทึกการแก้ไขแล้ว' + (patch.expand === 'want' ? ' · เข้าคิวรอ Claude ขยาย' : '')); }
+    catch(err){ e.busy = false; if (S.thread === t) renderThread(); toast(writeErr(err)); }
   }
   async function delComment(){
     if (!t.confirmDel){ t.confirmDel = true; renderThread(); setTimeout(function(){ if (S.thread === t && t.confirmDel){ t.confirmDel = false; renderThread(); } }, 4000); return; }
@@ -2797,7 +2878,7 @@ function renderPanel(){
         h('div', {class:'cm-card-top'}, h('span', {class:'cm-badge', 'data-st':st, text:String(nums[c.id])}), h('span', {class:'cm-card-title', text:(c.spec && c.spec.title) || c.note})),
         crumbNode((c.path || []).slice(1), ''),
         h('div', {class:'cm-card-foot'}, h('span', {class:'cm-chip', 'data-st':st, text:ST[st]}), h('span', {text:nameOf(c.author, c)}), h('span', {text:when(c.createdAt)}),
-          rc ? h('span', {text:rc + ' ความเห็น'}) : null, c.spec && c.spec.questions && c.spec.questions.length ? h('span', {text:c.spec.questions.length + ' คำถาม'}) : null, !c.spec ? h('span', {text:'ยังไม่ขยาย'}) : null));
+          rc ? h('span', {text:rc + ' ความเห็น'}) : null, c.spec && c.spec.questions && c.spec.questions.length ? h('span', {text:c.spec.questions.length + ' คำถาม'}) : null, !c.spec ? h('span', {class:'cm-xtag', 'data-x':expandOf(c) || 'none', text:EXP[expandOf(c)]}) : null));
       sec.append(card);
     });
     box.append(sec);
@@ -2833,7 +2914,7 @@ function buildMd(){
         if (s.affects.length) out.push('- **กระทบส่วนอื่น:** ' + s.affects.join(' · '));
         if (s.done_when.length) out.push('- **ถือว่าเสร็จเมื่อ:** ' + s.done_when.join(' · '));
         if (s.questions.length){ out.push('- **รอตัดสิน:**'); s.questions.forEach(function(q){ out.push('    - ' + q); }); }
-      }
+      } else if (expandOf(c) === 'want') out.push('- **หมายเหตุ:** ทีมขอให้ Claude ขยายความ ยังรอขยาย');
       var rs = repliesOf(c.id);
       if (rs.length){ out.push('- **ความเห็นในเธรด:**'); rs.forEach(function(r){ out.push('    - ' + plainName(r.author, r) + ': ' + r.text.replace(/\n/g, ' ')); }); }
       out.push('');
@@ -2899,12 +2980,13 @@ function renderSummary(){
   var hadFocus = document.activeElement && document.activeElement.id === 'cm-sum-q';
   var nums = numbers(), all = S.comments, cnt = {all:all.length, open:0, ready:0, done:0, questions:0};
   all.forEach(function(c){ var st = c.status || 'open'; cnt[st]++; if (st === 'open' && c.spec && c.spec.questions) cnt.questions += c.spec.questions.length; });
+  var waitX = all.filter(function(c){ return expandOf(c) === 'want'; }).length;
   var screens = [], si = {};
   all.forEach(function(c){ if (!(c.screen in si)){ si[c.screen] = screens.length; screens.push({name:c.screen, roles:{}, all:0, open:0, ready:0, done:0}); } var g = screens[si[c.screen]]; g.all++; g[c.status || 'open']++; if (c.role) g.roles[c.role] = 1; });
   sumEl.textContent = '';
   var head = h('header', {class:'cm-sum-head'},
     h('div', {class:'cm-grow'}, h('div', {class:'cm-label', text:'PR TASK MANAGER · REVIEW'}), h('h2', {text:'สรุปคอมเมนต์ทั้งหมด'}),
-      h('p', {class:'cm-meta', text:all.length + ' รายการ จาก ' + screens.length + ' หน้าจอ' + (sourceLabel() ? ' · ' + sourceLabel() : '')})),
+      h('p', {class:'cm-meta', text:all.length + ' รายการ จาก ' + screens.length + ' หน้าจอ' + (waitX ? ' · รอ Claude ขยาย ' + waitX + ' รายการ' : '') + (sourceLabel() ? ' · ' + sourceLabel() : '')})),
     h('div', {class:'cm-row'},
       h('button', {class:'cm-btn', type:'button', disabled:!all.length, onClick:exportMd}, ic('down', 16), 'ไฟล์ .md ส่ง dev'),
       h('button', {class:'cm-btn', type:'button', disabled:!all.length, onClick:exportJson, title:'ไฟล์ข้อมูลสำหรับอัปเดตหน้า GitHub'}, ic('json', 16), 'comments.json'),
@@ -2949,7 +3031,7 @@ function renderSummary(){
         stCtl),
       h('div', {class:'cm-item-body'},
         h('div', null, h('div', {class:'cm-label', text:'โน้ตต้นฉบับ · ' + plainName(c.author, c) + ' · ' + shortDate(c.createdAt)}), h('p', {class:'cm-note', text:c.note})),
-        s ? specNode(s) : h('p', {class:'cm-hint', text:'ยังไม่ได้ขยายเป็นรายการสำหรับ dev'}),
+        s ? specNode(s) : expandRow(c),
         rs.length ? h('div', null, h('div', {class:'cm-label', text:'ความเห็นในเธรด'}), h('div', {class:'cm-replies'}, rs.map(function(r){ return h('div', {class:'cm-reply'}, h('small', {text:nameOf(r.author, r) + ' · ' + when(r.createdAt)}), h('p', {text:r.text})); }))) : null),
       h('div', {class:'cm-row'}, h('button', {class:'cm-btn', type:'button', onClick:function(){ jumpTo(c); }}, ic('pin', 16), 'ไปที่จุดนี้บนหน้าจอ'))));
   });
