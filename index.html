@@ -63,6 +63,48 @@ cm-root :focus-visible{outline:2px solid var(--cm-pin);outline-offset:2px}
 .cm-navbadge{position:fixed;left:0;top:0;display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 7px 0 6px;border-radius:10px;background:var(--cm-pin);color:var(--cm-pin-ink);font:600 11px/20px var(--cm-mono);box-shadow:0 0 0 2px var(--cm-bg);pointer-events:none}
 .cm-navbadge[data-st="ready"]{background:var(--cm-ready)}
 
+
+/* pin hover label */
+.cm-pin::after{content:attr(data-tip);position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 10px;border-radius:7px;background:var(--cm-ink);color:var(--cm-bg);font:500 12.5px/1.45 var(--cm-font);text-align:left;opacity:0;pointer-events:none;transition:opacity .12s}
+.cm-pin:not([data-tip])::after{display:none}
+.cm-pin:hover::after,.cm-pin:focus-visible::after{opacity:1}
+
+/* legend box */
+.cm-legend{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));width:240px;display:flex;flex-direction:column;gap:6px;padding:10px 10px 8px;background:var(--cm-bg);border:1px solid var(--cm-line);border-radius:14px;box-shadow:var(--cm-shadow);pointer-events:auto}
+.cm-legend.is-closed{width:auto !important;padding:0;background:none;border:0;box-shadow:none}
+.cm-legend.is-docked{box-shadow:none}
+.cm-leg-head{display:flex;align-items:center;gap:6px;padding:0 2px 0 6px}
+.cm-leg-head strong{font-size:13px;font-weight:600}
+.cm-leg-list,.cm-leg-more{display:flex;flex-direction:column;gap:2px}
+.cm-leg-more{padding-top:6px;margin-top:2px;border-top:1px solid var(--cm-line)}
+.cm-leg-row{display:flex;align-items:center;gap:10px;width:100%;padding:6px;border:1px solid transparent;border-radius:10px;background:none;color:var(--cm-ink);text-align:left;font:inherit;cursor:pointer}
+.cm-leg-row:hover{background:var(--cm-bg2)}
+.cm-leg-row.is-on{border-color:var(--cm-line);background:var(--cm-bg2)}
+.cm-leg-row.is-dim{opacity:.5}
+.cm-leg-row.is-static{cursor:default}
+.cm-leg-row.is-static:hover{background:none}
+.cm-leg-sample{position:relative;flex:0 0 46px;height:34px;display:flex;align-items:center;justify-content:center}
+.cm-leg-frame{position:absolute;inset:8px 2px 2px 2px;border:2px dashed var(--cm-pin);border-radius:6px;background:var(--cm-hl)}
+.cm-leg-sample[data-st="ready"] .cm-leg-frame{border-color:var(--cm-ready);background:transparent}
+.cm-leg-sample[data-st="done"] .cm-leg-frame{border-color:var(--cm-done);background:transparent;opacity:.7}
+.cm-leg-pin{position:relative;width:22px;height:22px;border-radius:11px 11px 11px 3px;background:var(--cm-pin);color:var(--cm-pin-ink);font:600 11px/22px var(--cm-mono);text-align:center;box-shadow:0 0 0 2px var(--cm-bg);transform:translate(-6px,-6px)}
+.cm-leg-sample[data-st="ready"] .cm-leg-pin{background:var(--cm-ready)}
+.cm-leg-sample[data-st="done"] .cm-leg-pin{background:var(--cm-done)}
+.cm-leg-pin.is-ghost{background:var(--cm-bg);color:var(--cm-pin);box-shadow:0 0 0 2px var(--cm-pin);transform:none}
+.cm-navbadge.is-sample{position:static;transform:none}
+.cm-leg-text{display:flex;flex-direction:column;min-width:0}
+.cm-leg-name{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500}
+.cm-leg-n{margin-left:auto;min-width:22px;height:18px;padding:0 6px;border-radius:9px;background:var(--cm-bg2);font:600 11px/18px var(--cm-mono);text-align:center}
+.cm-leg-row.is-on .cm-leg-n{background:var(--cm-bg)}
+.cm-leg-text small{font-size:11.5px;color:var(--cm-sub);line-height:1.4}
+.cm-leg-foot{padding:4px 6px 0;font-size:11.5px}
+.cm-leg-pill{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:1px solid var(--cm-line);border-radius:17px;background:var(--cm-bg);color:var(--cm-ink);font:500 13px var(--cm-font);box-shadow:var(--cm-shadow);cursor:pointer}
+.cm-leg-pill b{font-weight:600;color:var(--cm-sub)}
+.cm-leg-dots{display:inline-flex;gap:3px}
+.cm-leg-dots i{width:9px;height:9px;border-radius:5px 5px 5px 2px;background:var(--cm-pin)}
+.cm-leg-dots i[data-st="ready"]{background:var(--cm-ready)}
+.cm-leg-dots i[data-st="done"]{background:var(--cm-done)}
+
 /* toolbar */
 .cm-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;padding:5px;max-width:calc(100vw - 24px);background:var(--cm-bg);border:1px solid var(--cm-line);border-radius:14px;box-shadow:var(--cm-shadow);pointer-events:auto}
 .cm-tb{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:var(--cm-ink);font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap}
@@ -212,6 +254,7 @@ cm-root :focus-visible{outline:2px solid var(--cm-pin);outline-offset:2px}
 }
 @media (prefers-reduced-motion:reduce){
   .cm-pin{transition:none}
+  .cm-pin::after{transition:none}
   .cm-dots span{animation:none;opacity:.8}
 }
 
@@ -1953,6 +1996,7 @@ var ICON = {
   pin:'<path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/>'
 };
 var LOCAL_KEY = 'cm-local-v1';
+var SHEET_URL = 'https://script.google.com/macros/s/AKfycbxhR26W1Z48Z-ypzA89IfQF36cW5XsIvsQyH_SlPnCQSnj8jp-gD5XCowOs28fqVIOEwg/exec'.indexOf('http') === 0 ? 'https://script.google.com/macros/s/AKfycbxhR26W1Z48Z-ypzA89IfQF36cW5XsIvsQyH_SlPnCQSnj8jp-gD5XCowOs28fqVIOEwg/exec' : '';
 var CONTEXT = [
 'ระบบ: PR Task Manager เว็บแอปรับคำสั่งงาน (work order) ของส่วนงานสื่อสารองค์กร สภาวิชาชีพบัญชี ตอนนี้เป็น prototype โหมด Demo (React, ไฟล์ Main.dc.html)',
 'Role ใน prototype: requester ผู้สั่งงาน, staff เจ้าหน้าที่ PR, manager หัวหน้าส่วนงาน PR, admin ผู้ดูแลระบบ ทีมกำลังพิจารณาเพิ่ม role "Senior"',
@@ -1971,8 +2015,8 @@ var S = {mode:'browse', comments:[], replies:[], own:{comments:[], replies:[]}, 
   me:null, owner:false, canWrite:true, store:null, live:false, connecting:true,
   sample:null, downloads:null, user:null, names:{}, pendingNames:{},
   composer:null, thread:null, hoverEl:null, bypass:false, unsubs:[], raf:0, toastT:0, introOpen:false,
-  sum:{open:false, q:'', status:'all', screen:'all'}};
-var root, hoverBox, hoverTag, pinLayer, markLayer, navLayer, popHost, barEl, panelEl, toastEl, introEl, sumEl;
+  sum:{open:false, q:'', status:'all', screen:'all'}, only:null, legend:null};
+var root, hoverBox, hoverTag, pinLayer, markLayer, navLayer, popHost, barEl, panelEl, toastEl, introEl, sumEl, legendEl;
 var pins = {}, marks = {}, navBadges = [];
 
 /* ---------- helpers ---------- */
@@ -2115,6 +2159,52 @@ function dbStore(db){
     update:function(col, id, p){ return db.doc(col + '/' + id).update(p); },
     remove:function(col, id){ return db.doc(col + '/' + id).delete(); } };
 }
+function sheetStore(url){
+  var subs = {comments:[], replies:[]}, cache = {comments:[], replies:[]}, busy = 0;
+  function emit(){ ['comments', 'replies'].forEach(function(col){ subs[col].forEach(function(f){ f(cache[col].slice()); }); }); }
+  async function pull(){
+    var r = await fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'action=list&t=' + Date.now(), {cache:'no-store'});
+    var j = await r.json();
+    if (!j || !j.ok) throw {code:'sheet', message:j && j.error};
+    if (busy) return;
+    cache.comments = j.comments || []; cache.replies = j.replies || [];
+    S.sheetErr = false; S.syncedAt = Date.now(); emit();
+  }
+  async function call(body){
+    busy++;
+    try {
+      var r = await fetch(url, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body)});
+      var j = await r.json();
+      if (!j || !j.ok) throw {code:'sheet', message:j && j.error};
+      return j;
+    } catch(e){ throw (e && e.code) ? e : {code:'sheet', message:String(e)}; }
+    finally { busy--; }
+  }
+  function safePull(){ return pull().catch(function(){ S.sheetErr = true; renderBar(); }); }
+  return { live:true, kind:'sheet',
+    start:function(){ safePull(); setInterval(function(){ if (!document.hidden) safePull(); }, 12000); window.addEventListener('focus', safePull); },
+    sub:function(col, f){ subs[col].push(f); f(cache[col].slice()); return function(){ subs[col] = subs[col].filter(function(x){ return x !== f; }); }; },
+    add:async function(col, o){ var j = await call({action:'add', sheet:col, data:o}); cache[col] = cache[col].concat([Object.assign({id:j.id}, o)]); emit(); safePull(); return j.id; },
+    update:async function(col, id, p){ cache[col] = cache[col].map(function(x){ return x.id === id ? Object.assign({}, x, p) : x; }); emit(); await call({action:'update', sheet:col, id:id, data:p}); safePull(); },
+    remove:async function(col, id){ cache[col] = cache[col].filter(function(x){ return x.id !== id; }); if (col === 'comments') cache.replies = cache.replies.filter(function(r){ return r.commentId !== id; }); emit(); await call({action:'remove', sheet:col, id:id}); safePull(); }
+  };
+}
+function localId(){ var id = lsGet('cm-uid'); if (!id){ id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet('cm-uid', id); } return id; }
+function myName(){ return (lsGet('cm-name') || '').trim(); }
+function needName(){ return S.source === 'sheet' && !myName(); }
+function nameField(){
+  if (!needName()) return null;
+  var inp = h('input', {class:'cm-in', id:'cm-myname', type:'text', maxlength:'40', placeholder:'ชื่อของคุณ (แสดงกับคอมเมนต์ ใส่ครั้งเดียว)', 'aria-label':'ชื่อของคุณ'});
+  inp.value = S.nameDraft || '';
+  inp.addEventListener('input', function(){ S.nameDraft = inp.value; });
+  return inp;
+}
+function takeName(){
+  if (!needName()) return true;
+  var x = document.getElementById('cm-myname'), v = x ? x.value.trim() : '';
+  if (!v){ toast('ใส่ชื่อของคุณก่อน ทีมจะได้รู้ว่าใครคอมเมนต์'); if (x) x.focus(); return false; }
+  lsSet('cm-name', v); return true;
+}
 function merge(){
   var sc = S.snap ? S.snap.comments : [], sr = S.snap ? S.snap.replies : [];
   S.comments = sc.concat(S.own.comments).sort(byTime);
@@ -2132,6 +2222,7 @@ function writeErr(e){
   if (c === 'invalid_argument'){ S.canWrite = false; renderAll(); return 'บันทึกไม่ได้ คุณน่าจะมีสิทธิ์ดูอย่างเดียว ขอสิทธิ์แก้ไขจากเจ้าของหน้านี้'; }
   if (c === 'quota_exceeded') return 'ที่เก็บคอมเมนต์เต็มแล้ว ลบคอมเมนต์ที่เสร็จแล้วออกบางส่วน';
   if (c === 'resource_exhausted') return 'บันทึกถี่เกินไป รอสักครู่แล้วลองใหม่';
+  if (c === 'sheet') return 'บันทึกลง Google Sheet ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่';
   return 'บันทึกไม่สำเร็จ ลองอีกครั้ง';
 }
 async function wantNames(){
@@ -2161,6 +2252,13 @@ async function loadSnapshot(){
   } catch(e){}
 }
 async function connect(){
+  if (SHEET_URL && !window.claude){
+    S.me = localId(); S.store = sheetStore(SHEET_URL); S.live = true; S.source = 'sheet';
+    subscribe(); S.store.start();
+    S.connecting = false; renderAll();
+    if (location.hash === '#summary') openSummary(true);
+    return;
+  }
   var has = false;
   for (var i = 0; i < 30; i++){ if (window.claude && typeof window.claude.use === 'function'){ has = true; break; } await sleep(100); }
   if (has){
@@ -2250,7 +2348,8 @@ function build(){
   sumEl = h('section', {class:'cm-sum', hidden:true, 'aria-label':'สรุปคอมเมนต์'});
   toastEl = h('div', {class:'cm-toast', role:'status', hidden:true});
   introEl = h('div', {class:'cm-intro', hidden:true, role:'dialog', 'aria-label':'วิธีใช้'});
-  root.append(hoverBox, markLayer, navLayer, pinLayer, panelEl, sumEl, popHost, introEl, barEl, toastEl);
+  legendEl = h('aside', {class:'cm-legend', 'aria-label':'คำอธิบายสัญลักษณ์'});
+  root.append(hoverBox, markLayer, navLayer, pinLayer, legendEl, panelEl, sumEl, popHost, introEl, barEl, toastEl);
   document.body.append(root);
 }
 
@@ -2259,6 +2358,7 @@ function shortDate(ms){ try { return new Date(ms).toLocaleDateString('th-TH', {d
 function sourceLabel(){
   if (S.connecting) return 'กำลังเชื่อมต่อ…';
   if (S.source === 'live') return S.canWrite ? '' : 'ดูอย่างเดียว';
+  if (S.source === 'sheet') return S.sheetErr ? 'เชื่อม Google Sheet ไม่ได้ กำลังลองใหม่' : (S.syncedAt ? 'ซิงก์กับ Google Sheet · ' + new Date(S.syncedAt).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}) : 'กำลังโหลดจาก Google Sheet…');
   if (S.source === 'snapshot') return 'ข้อมูลทีม ณ ' + shortDate(S.snap.exportedAt) + ' · คอมเมนต์ใหม่เก็บในเครื่องนี้';
   return 'คอมเมนต์เก็บในเครื่องนี้เท่านั้น';
 }
@@ -2290,7 +2390,7 @@ function schedule(){ if (!S.raf) S.raf = requestAnimationFrame(layout); }
 function layout(){
   S.raf = 0;
   var vis = visibleScreens(), nums = numbers(), seen = {}, activeId = S.thread && S.thread.id;
-  var showAll = !S.hide && !S.sum.open;
+  var showAll = !S.hide && !S.sum.open, placed = [];
   S.comments.forEach(function(c){
     c._here = false;
     if (!vis[c.screen]) return;
@@ -2298,6 +2398,7 @@ function layout(){
     var r = el.getBoundingClientRect(); if (!r.width && !r.height) return;
     c._here = true;
     if (!showAll && c.id !== activeId) return;
+    if (S.only && (c.status || 'open') !== S.only && c.id !== activeId) return;
     if (r.bottom < -40 || r.top > innerHeight + 40 || r.right < -40 || r.left > innerWidth + 40) return;
     var st = c.status || 'open';
     // dashed frame around the commented element
@@ -2308,9 +2409,13 @@ function layout(){
     m.style.width = Math.round(r.width + 6) + 'px'; m.style.height = Math.round(r.height + 6) + 'px';
     // numbered pin at the clicked spot
     var x = r.left + clamp(c.ox || 0, 0, 1) * r.width, y = r.top + clamp(c.oy || 0, 0, 1) * r.height;
+    // fan out pins that land on the same spot so every number stays readable
+    for (var k = 0; k < placed.length; k++){ if (Math.abs(placed[k][0] - x) < 14 && Math.abs(placed[k][1] - y) < 14){ x += 18; k = -1; } }
+    placed.push([x, y]);
     var p = pins[c.id];
     if (!p){ p = h('button', {class:'cm-pin', type:'button'}); p.addEventListener('click', function(ev){ ev.stopPropagation(); openThread(c.id, 'pin'); }); pins[c.id] = p; pinLayer.append(p); }
     p.textContent = nums[c.id]; p.dataset.st = st;
+    p.dataset.tip = '#' + nums[c.id] + ' · ' + ST[st] + ' · ' + clip((c.spec && c.spec.title) || c.note || '', 60);
     p.setAttribute('aria-label', 'คอมเมนต์ #' + nums[c.id] + ': ' + ((c.spec && c.spec.title) || c.note || ''));
     p.classList.toggle('is-on', c.id === activeId);
     p.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y - 30) + 'px)';
@@ -2319,6 +2424,8 @@ function layout(){
   Object.keys(pins).forEach(function(id){ if (!seen[id]){ pins[id].remove(); delete pins[id]; } });
   Object.keys(marks).forEach(function(id){ if (!seen[id]){ marks[id].remove(); delete marks[id]; } });
   layoutNav(showAll && !dialogs().length);
+  // keep the legend out of the way of the task drawer and the notification popover
+  if (legendEl){ legendEl.style.visibility = dialogs().length ? 'hidden' : ''; placeLegend(); }
   // ghost pin for the composer
   var g = pinLayer.querySelector('.is-ghost');
   if (S.composer){
@@ -2419,7 +2526,7 @@ function renderComposer(focus){
   var saveBtn = h('button', {class:'cm-btn ' + (c.spec || !S.sample ? 'cm-btn-p' : ''), type:'button', disabled:!c.note.trim() || c.busy, onClick:doSave, text:c.spec ? 'บันทึก' : (S.sample ? 'บันทึกโดยไม่ขยาย' : 'บันทึก')});
   var pop = h('div', {class:'cm-pop', role:'dialog', 'aria-label':'คอมเมนต์ใหม่'},
     h('div', {class:'cm-pop-head'}, h('span', {class:'cm-badge', text:'+'}), h('strong', {class:'cm-grow', text:'คอมเมนต์ใหม่'}), h('button', {class:'cm-x', type:'button', 'aria-label':'ปิด', onClick:closeComposer}, ic('x', 16))),
-    crumbNode(c.ctx.path, c.ctx.role), ta,
+    crumbNode(c.ctx.path, c.ctx.role), nameField(), ta,
     c.busy ? thinking(function(){ if (c.ctl) c.ctl.abort(); }) : null,
     c.spec ? specNode(c.spec) : null,
     c.spec ? h('p', {class:'cm-hint', text:'ตรวจดูแล้วกดบันทึก ถ้ายังไม่ตรงให้แก้โน้ตแล้วกดขยายใหม่'}) : (!S.sample && !S.connecting ? h('p', {class:'cm-hint', text:S.live ? 'หน้านี้ยังเรียก Claude ไม่ได้ โน้ตจะถูกบันทึกไว้ก่อน แล้วขยายภายหลังได้' : 'ปุ่มให้ Claude ขยายใช้ได้เมื่อเปิดผ่าน claude.ai · คอมเมนต์นี้จะเก็บในเบราว์เซอร์เครื่องนี้'}) : null),
@@ -2438,11 +2545,13 @@ function renderComposer(focus){
     if (!c.note.trim()) return;
     if (!S.canWrite){ toast('คุณมีสิทธิ์ดูอย่างเดียว'); return; }
     if (S.connecting){ toast('กำลังเชื่อมต่อที่เก็บคอมเมนต์ รอสักครู่แล้วกดบันทึกอีกครั้ง'); return; }
+    if (!takeName()) return;
     var now = Date.now(), x = c.ctx;
     var doc = {note:c.note.trim(), screen:x.screen, role:x.role, path:x.path, selector:x.selector, tag:x.tag, elText:x.elText, html:x.html,
       ox:x.ox, oy:x.oy, spec:c.spec || null, status:'open', author:S.me || '', createdAt:now, updatedAt:now};
+    if (S.source === 'sheet') doc.authorName = myName();
     c.busy = true; renderComposer();
-    try { var id = await S.store.add('comments', doc); closeComposer(); var n = numbers()[id]; toast('บันทึกคอมเมนต์' + (n ? ' #' + n : '') + ' แล้ว'); }
+    try { var id = await S.store.add('comments', doc); closeComposer(); var n = numbers()[id]; toast('บันทึกคอมเมนต์' + (n ? ' #' + n : '') + ' แล้ว' + (S.source === 'sheet' ? ' (ลง Google Sheet)' : '')); }
     catch(e){ c.busy = false; renderComposer(true); toast(writeErr(e)); }
   }
 }
@@ -2485,6 +2594,7 @@ function renderThread(focus){
     h('div', null, h('div', {class:'cm-label', text:'โน้ตต้นฉบับ'}), h('p', {class:'cm-note', text:c.note})),
     t.busy ? thinking(function(){ if (t.ctl) t.ctl.abort(); }) : (c.spec ? specNode(c.spec) : h('p', {class:'cm-hint', text:'ยังไม่ได้ขยายเป็นรายการสำหรับ dev'})),
     reps.length ? h('div', {class:'cm-replies'}, reps.map(function(r){ return h('div', {class:'cm-reply'}, h('small', {text:nameOf(r.author, r) + ' · ' + when(r.createdAt)}), h('p', {text:r.text})); })) : null,
+    S.canWrite ? nameField() : null,
     S.canWrite ? ta : null,
     h('div', {class:'cm-row'},
       S.canWrite ? sendBtn : null,
@@ -2496,7 +2606,10 @@ function renderThread(focus){
   if (focus && S.canWrite) setTimeout(function(){ var x = popEl && popEl.querySelector('#cm-reply'); if (x){ x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }, 0);
   async function sendReply(){
     var v = t.draft.trim(); if (!v) return;
-    try { await S.store.add('replies', {commentId:c.id, text:v, author:S.me || '', createdAt:Date.now()}); t.draft = ''; var x = popEl && popEl.querySelector('#cm-reply'); if (x) x.value = ''; renderThread(true); }
+    if (!takeName()) return;
+    var rep = {commentId:c.id, text:v, author:S.me || '', createdAt:Date.now()};
+    if (S.source === 'sheet') rep.authorName = myName();
+    try { await S.store.add('replies', rep); t.draft = ''; var x = popEl && popEl.querySelector('#cm-reply'); if (x) x.value = ''; renderThread(true); }
     catch(e){ toast(writeErr(e)); }
   }
   async function reExpand(){
@@ -2509,7 +2622,7 @@ function renderThread(focus){
   }
   async function delComment(){
     if (!t.confirmDel){ t.confirmDel = true; renderThread(); setTimeout(function(){ if (S.thread === t && t.confirmDel){ t.confirmDel = false; renderThread(); } }, 4000); return; }
-    try { var rs = repliesOf(c.id).filter(function(r){ return !r._ro; }); for (var i = 0; i < rs.length; i++) await S.store.remove('replies', rs[i].id); await S.store.remove('comments', c.id); closeThread(); toast('ลบคอมเมนต์แล้ว'); }
+    try { var rs = S.source === 'sheet' ? [] : repliesOf(c.id).filter(function(r){ return !r._ro; }); for (var i = 0; i < rs.length; i++) await S.store.remove('replies', rs[i].id); await S.store.remove('comments', c.id); closeThread(); toast('ลบคอมเมนต์แล้ว'); }
     catch(e){ toast(writeErr(e)); }
   }
 }
@@ -2749,10 +2862,72 @@ function renderIntro(){
 }
 function closeIntro(){ S.introOpen = false; introEl.hidden = true; lsSet('cm-intro-done', '1'); }
 
+/* ---------- legend ---------- */
+var LEG = [
+  ['open', 'รอตัดสิน', 'ยังมีคำถามให้ทีมตอบ หรือยังไม่ได้ตกลง'],
+  ['ready', 'พร้อมพัฒนา', 'ตกลงแล้ว dev เริ่มทำได้'],
+  ['done', 'เสร็จแล้ว', 'แก้ในระบบเรียบร้อย']
+];
+function legendOpen(){
+  if (S.legend === null){ var v = lsGet('cm-legend'); S.legend = v ? v === 'open' : innerWidth > 760; }
+  return S.legend;
+}
+function placeLegend(){
+  if (legendEl.hidden) return;
+  var side = document.querySelector('.pr .side'), nav = document.querySelector('.pr .side-nav'), foot = document.querySelector('.pr .side .side-foot');
+  var st = legendEl.style;
+  if (side && nav && innerWidth > 860){
+    var sr = side.getBoundingClientRect(), nr = nav.getBoundingClientRect(), fr = foot ? foot.getBoundingClientRect() : null;
+    var lh = legendEl.offsetHeight;
+    var top = Math.max(nr.bottom + 14, 14);
+    var bottom = (fr && fr.height && fr.top < innerHeight ? fr.top : innerHeight) - 14;
+    if (sr.width >= 200 && sr.right > 0){
+      if (bottom - top < lh) top = bottom - lh;
+      if (top >= Math.min(nr.bottom, innerHeight) + 6 || nr.bottom < 0){
+        legendEl.classList.add('is-docked');
+        st.left = Math.round(sr.left + 10) + 'px'; st.width = Math.round(sr.width - 20) + 'px'; st.top = Math.round(top) + 'px'; st.bottom = 'auto';
+        return;
+      }
+    }
+  }
+  legendEl.classList.remove('is-docked'); st.left = ''; st.width = ''; st.top = ''; st.bottom = '';
+}
+function renderLegend(){
+  legendEl.hidden = S.sum.open;
+  if (S.sum.open) return;
+  var cnt = {open:0, ready:0, done:0};
+  S.comments.forEach(function(c){ cnt[c.status || 'open']++; });
+  legendEl.textContent = '';
+  legendEl.classList.toggle('is-closed', !legendOpen());
+  if (!legendOpen()){
+    legendEl.append(h('button', {class:'cm-leg-pill', type:'button', 'aria-expanded':'false', title:'แสดงคำอธิบายสัญลักษณ์', onClick:function(){ S.legend = true; lsSet('cm-legend', 'open'); renderLegend(); }},
+      h('span', {class:'cm-leg-dots', 'aria-hidden':'true'}, h('i', {'data-st':'open'}), h('i', {'data-st':'ready'}), h('i', {'data-st':'done'})), 'สัญลักษณ์',
+      S.only ? h('b', {text:'· ' + ST[S.only]}) : null));
+    placeLegend();
+    return;
+  }
+  legendEl.append(h('div', {class:'cm-leg-head'}, h('strong', {class:'cm-grow', text:'สัญลักษณ์คอมเมนต์'}),
+    h('button', {class:'cm-x', type:'button', 'aria-label':'ย่อกล่องสัญลักษณ์', title:'ย่อ', onClick:function(){ S.legend = false; lsSet('cm-legend', 'closed'); renderLegend(); }}, ic('x', 15))));
+  var list = h('div', {class:'cm-leg-list', role:'group', 'aria-label':'สถานะ คลิกเพื่อแสดงเฉพาะสถานะนั้น'});
+  LEG.forEach(function(l){
+    var on = S.only === l[0];
+    list.append(h('button', {class:'cm-leg-row' + (on ? ' is-on' : '') + (S.only && !on ? ' is-dim' : ''), type:'button', 'aria-pressed':String(on), onClick:function(){ S.only = on ? null : l[0]; renderAll(); }},
+      h('span', {class:'cm-leg-sample', 'data-st':l[0], 'aria-hidden':'true'}, h('span', {class:'cm-leg-frame'}), h('span', {class:'cm-leg-pin', text:'1'})),
+      h('span', {class:'cm-leg-text'}, h('span', {class:'cm-leg-name'}, l[1], h('span', {class:'cm-leg-n', text:String(cnt[l[0]])})), h('small', {text:l[2]}))));
+  });
+  legendEl.append(list);
+  legendEl.append(h('div', {class:'cm-leg-more'},
+    h('div', {class:'cm-leg-row is-static'}, h('span', {class:'cm-leg-sample', 'aria-hidden':'true'}, h('span', {class:'cm-navbadge is-sample'}, ic('bubble', 12), h('span', {text:'2'}))), h('span', {class:'cm-leg-text'}, h('span', {class:'cm-leg-name', text:'ป้ายบนเมนู'}), h('small', {text:'จำนวนคอมเมนต์ในหน้านั้น'}))),
+    h('div', {class:'cm-leg-row is-static'}, h('span', {class:'cm-leg-sample', 'aria-hidden':'true'}, h('span', {class:'cm-leg-pin is-ghost', text:'+'})), h('span', {class:'cm-leg-text'}, h('span', {class:'cm-leg-name', text:'กำลังเขียน'}), h('small', {text:'คอมเมนต์ที่ยังไม่บันทึก'})))));
+  legendEl.append(h('p', {class:'cm-hint cm-leg-foot'}, S.only ? h('button', {class:'cm-link', type:'button', text:'แสดงหมุดทุกสถานะ', onClick:function(){ S.only = null; renderAll(); }}) : 'คลิกสถานะเพื่อแสดงเฉพาะหมุดสถานะนั้น · ชี้ที่หมุดเพื่อดูหัวข้อ'));
+  placeLegend();
+}
+
 /* ---------- render all ---------- */
 function renderAll(){
   renderBar();
   renderSummary();
+  renderLegend();
   root.classList.toggle('is-panel', S.panel);
   if (S.panel) renderPanel(); else panelEl.hidden = true;
   if (S.thread) renderThread();
